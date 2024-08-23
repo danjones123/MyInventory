@@ -13,10 +13,13 @@ public class RoomServiceImpl {
   @Autowired
   RoomRepository roomRepository;
 
-  public Room createRoom(String name) {
+  public Room findOrCreateRoom(String name) {
     Room room = new Room();
     room.setName(name);
-    return roomRepository.save(room);
+    return findRoom(name).orElse(roomRepository.save(room));
+
+
+//    return roomRepository.save(room);
   }
 
   public List<Room> getAllRooms() {

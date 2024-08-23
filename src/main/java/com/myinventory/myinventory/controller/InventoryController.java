@@ -24,9 +24,9 @@ public class InventoryController {
 
 
   //TODO update to find by name
-  @GetMapping("/{id}")
-  public ResponseEntity<StorageBox> getBoxById(@PathVariable String id) {
-    StorageBox storageBox = inventoryService.getStorageBox(id);
+  @GetMapping("/{name}")
+  public ResponseEntity<StorageBox> getBoxByName(@PathVariable String name) {
+    StorageBox storageBox = inventoryService.getStorageBox(name);
 
     return ResponseEntity.ok(storageBox);
   }
@@ -42,8 +42,12 @@ public class InventoryController {
     }
   }
 
-  @PutMapping("/{id}")
-  public ResponseEntity<StorageBox> updateBox(@RequestBody BoxContents boxContents, @PathVariable String id) {
-    return null;
+  @PatchMapping("/")
+  public ResponseEntity<?> updateBox(@RequestBody BoxContents boxContents) {
+    try {
+      return ResponseEntity.ok(inventoryService.updateBoxContents(boxContents));
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().body("Error updating box.\n" +  e.getMessage());
+    }
   }
 }

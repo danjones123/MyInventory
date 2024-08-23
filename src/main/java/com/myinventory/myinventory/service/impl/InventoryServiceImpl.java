@@ -1,6 +1,7 @@
 package com.myinventory.myinventory.service.impl;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoWriteException;
 import com.myinventory.myinventory.dto.BoxContents;
 import com.myinventory.myinventory.model.Room;
 import com.myinventory.myinventory.model.StorageBox;
@@ -36,23 +37,26 @@ public class InventoryServiceImpl implements InventoryService {
   }
 
   @Override
-  public StorageBox getStorageBox(String boxId) {
-    ObjectId id = new ObjectId(boxId);
+  public StorageBox getStorageBox(String boxName) {
 
-    Optional<StorageBox> optBox= boxRepository.findById(id);
+    Optional<StorageBox> optBox= boxRepository.findBoxByName(boxName);
 
     return optBox.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found"));
   }
 
   @Override
   @Transactional
-  public List<StorageBox> addNewStorageBox(BoxContents boxContents) throws IllegalArgumentException{
+  public List<StorageBox> addNewStorageBox(BoxContents boxContents) throws IllegalArgumentException {
     StorageBox storageBox = new StorageBox();
     storageBox.setBoxContents(new ArrayList<>(boxContents.getBoxContents()));
     storageBox.setName(boxContents.getName());
 
-    Optional<Room> optRoom = roomService.findRoom(boxContents.getRoom());
-    Room room = optRoom.orElse(roomService.createRoom(boxContents.getRoom()));
+    if(boxRepository.findBoxByName(boxContents.getName()).isPresent()) {
+      throw new IllegalArgumentException("A box with that name already exists");
+    }
+
+//    Optional<Room> optRoom = roomService.findRoom(boxContents.getRoom());
+    Room room = roomService.findOrCreateRoom(boxContents.getRoom());
     storageBox.setRoom(room);
 
     try {
@@ -66,6 +70,17 @@ public class InventoryServiceImpl implements InventoryService {
 
   @Override
   public StorageBox updateBoxContents(BoxContents boxContents) {
-    return null;
+
+    StorageBox oldBox = boxRepository.findBoxByName(boxContents.getName()).orElseThrow();
+
+    if(boxContents.getBoxContents() != null) {
+      oldBox.setBoxContents(boxContents.getBoxContents());
+    }
+    if(boxContents.getRoom() != null) {
+      oldBox.setRoom(roomService.findOrCreateRoom(boxContents.getRoom()));
+    }
+    return boxRepository.save(oldBox);
+
+
   }
 }
