@@ -18,7 +18,7 @@ public class RoomServiceImpl implements RoomService {
   public Room findOrCreateRoom(String name) {
     Room room = new Room();
     room.setName(name);
-    return findRoom(name).orElse(roomRepository.save(room));
+    return findRoom(name).orElse(null);
 
 
 //    return roomRepository.save(room);
