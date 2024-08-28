@@ -7,6 +7,7 @@ import com.myinventory.myinventory.model.Room;
 import com.myinventory.myinventory.model.StorageBox;
 import com.myinventory.myinventory.repository.BoxRepository;
 import com.myinventory.myinventory.service.InventoryService;
+import com.myinventory.myinventory.service.RoomService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class InventoryServiceImpl implements InventoryService {
   @Autowired
   BoxRepository boxRepository;
   @Autowired
-  RoomServiceImpl roomService;
+  RoomService roomService;
 
 
   @Override

@@ -1,21 +1,27 @@
 package com.myinventory.myinventory.controller;
 
 import com.myinventory.myinventory.dto.BoxContents;
+import com.myinventory.myinventory.model.Room;
 import com.myinventory.myinventory.model.StorageBox;
 import com.myinventory.myinventory.service.InventoryService;
+import com.myinventory.myinventory.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 @RestController
 @RequestMapping("/inv/v1")
+@CrossOrigin
 public class InventoryController {
 
   @Autowired
   InventoryService inventoryService;
+  @Autowired
+  RoomService roomService;
 
   @GetMapping("/")
   public ResponseEntity<List<StorageBox>> getAllBoxes() {
@@ -23,12 +29,16 @@ public class InventoryController {
   }
 
 
-  //TODO update to find by name
   @GetMapping("/{name}")
   public ResponseEntity<StorageBox> getBoxByName(@PathVariable String name) {
     StorageBox storageBox = inventoryService.getStorageBox(name);
 
     return ResponseEntity.ok(storageBox);
+  }
+
+  @GetMapping("/rooms")
+  public ResponseEntity<List<Room>> getRooms() {
+    return ResponseEntity.ok().body(roomService.findAllRooms());
   }
 
 
