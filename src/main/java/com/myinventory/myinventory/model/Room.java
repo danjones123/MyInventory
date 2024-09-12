@@ -17,5 +17,5 @@ public class Room {
   @Id
   private ObjectId id;
   @Indexed(unique=true)
-  private String name;
+  private String roomName;
 }

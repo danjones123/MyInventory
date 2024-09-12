@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -17,8 +16,15 @@ public class RoomServiceImpl implements RoomService {
 
   public Room findOrCreateRoom(String name) {
     Room room = new Room();
-    room.setName(name);
-    return findRoom(name).orElse(null);
+    room.setRoomName(name);
+
+    if(findRoom(name).isPresent()) {
+      return findRoom(name).get();
+    } else {
+      return roomRepository.save(room);
+    }
+
+//    return findRoom(name).orElse(null);
 
 
 //    return roomRepository.save(room);
@@ -29,10 +35,10 @@ public class RoomServiceImpl implements RoomService {
   }
 
   public Optional<Room> findRoom(String name) {
-    if(roomRepository.findByName(name).isPresent()) {
-      return roomRepository.findByName(name);
+    if(roomRepository.findByRoomName(name).isPresent()) {
+      return roomRepository.findByRoomName(name);
     } else {
-      return roomRepository.findByName(name.toLowerCase());
+      return roomRepository.findByRoomName(name.toLowerCase());
     }
 
 //    return ;

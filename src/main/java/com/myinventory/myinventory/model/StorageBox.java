@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -19,9 +20,17 @@ public class StorageBox {
   private ObjectId id;
 
   @Indexed(unique=true)
-  private String name;
+  private String boxName;
+
+  private String boxDescription;
 
   private ArrayList<String> boxContents;
 
   private Room room;
+
+  private Date expiryDate;
+
+  private String externalPhoto;
+
+  private String internalPhoto;
 }

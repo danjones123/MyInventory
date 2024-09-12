@@ -1,23 +1,22 @@
 package com.myinventory.myinventory.service.impl;
 
 import com.mongodb.DuplicateKeyException;
-import com.mongodb.MongoWriteException;
-import com.myinventory.myinventory.dto.BoxContents;
-import com.myinventory.myinventory.model.Room;
+import com.myinventory.myinventory.dto.RequestBox;
+import com.myinventory.myinventory.dto.ResponseBox;
+import com.myinventory.myinventory.mapper.StorageBoxMapper;
 import com.myinventory.myinventory.model.StorageBox;
 import com.myinventory.myinventory.repository.BoxRepository;
 import com.myinventory.myinventory.service.InventoryService;
 import com.myinventory.myinventory.service.RoomService;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.swing.text.html.Option;
-import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,43 +25,109 @@ import java.util.Optional;
 public class InventoryServiceImpl implements InventoryService {
 
   @Autowired
-  BoxRepository boxRepository;
+  private MongoTemplate mongoTemplate;
   @Autowired
-  RoomService roomService;
-
+  private BoxRepository boxRepository;
+  @Autowired
+  private RoomService roomService;
+  @Autowired
+  private StorageBoxMapper storageBoxMapper;
 
   @Override
-  public List<StorageBox> getAllStorageBoxes() {
+  public List<ResponseBox> getAllStorageBoxes() {
+    List<ResponseBox> responseBoxList = new ArrayList<>();
+    for(StorageBox storageBox : boxRepository.findAll()) {
+      responseBoxList.add(storageBoxMapper.mapStorageBoxToReturn(storageBox));
+    }
 
-    return boxRepository.findAll();
+
+    return responseBoxList;
   }
 
   @Override
-  public StorageBox getStorageBox(String boxName) {
+  public ResponseBox getStorageBox(String boxName) {
 
-    Optional<StorageBox> optBox= boxRepository.findBoxByName(boxName);
+    Optional<StorageBox> optBox= boxRepository.findBoxByBoxName(boxName);
+    StorageBox storageBox = optBox.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found"));
 
-    return optBox.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found"));
+    return storageBoxMapper.mapStorageBoxToReturn(storageBox);
   }
+
+  @Override
+  public List<ResponseBox> searchBoxes(String boxName, String boxDescription, List<String> boxContents, String roomName) {
+
+    Query query = new Query();
+
+    if (boxName != null && !boxName.isEmpty()) {
+        query.addCriteria(Criteria.where("boxName").regex(boxName, "i"));
+    }
+
+    if (boxDescription != null && !boxDescription.isEmpty()) {
+      query.addCriteria(Criteria.where("boxDescription").regex(boxDescription, "i"));
+    }
+
+    if (roomName != null && !roomName.isEmpty()) {
+        query.addCriteria(Criteria.where("room.roomName").regex(roomName, "i"));
+    }
+
+    if (boxContents != null && !boxContents.isEmpty()) {
+      for(String content: boxContents) {
+        query.addCriteria(Criteria.where("boxContents").regex(content, "i"));
+      }
+    }
+
+    List<StorageBox> searchedList = mongoTemplate.find(query, StorageBox.class);
+    List<ResponseBox> outputList = new ArrayList<>();
+    for(StorageBox storageBox: searchedList) {
+      outputList.add(storageBoxMapper.mapStorageBoxToReturn(storageBox));
+    }
+
+    return outputList;
+  }
+
+
+  @Override
+  public List<ResponseBox> globalSearch(String searchItem, String roomName) {
+
+    Query query = new Query();
+
+    if (searchItem != null && !searchItem.isEmpty()) {
+      query.addCriteria(new Criteria().orOperator(
+      Criteria.where("boxName").regex(searchItem, "i"),
+      Criteria.where("boxDescription").regex(searchItem, "i"),
+      Criteria.where("boxContents").regex(searchItem, "i")));
+    }
+
+
+    if (roomName != null && !roomName.isEmpty()) {
+      query.addCriteria(Criteria.where("room.roomName").regex(roomName, "i"));
+    }
+
+    List<StorageBox> searchedList = mongoTemplate.find(query, StorageBox.class);
+    List<ResponseBox> outputList = new ArrayList<>();
+    for(StorageBox storageBox: searchedList) {
+      outputList.add(storageBoxMapper.mapStorageBoxToReturn(storageBox));
+    }
+
+    return outputList;
+
+  }
+
+
+
 
   @Override
   @Transactional
-  public List<StorageBox> addNewStorageBox(BoxContents boxContents) throws IllegalArgumentException {
-    StorageBox storageBox = new StorageBox();
-    storageBox.setBoxContents(new ArrayList<>(boxContents.getBoxContents()));
-    storageBox.setName(boxContents.getName());
-
-    if(boxRepository.findBoxByName(boxContents.getName()).isPresent()) {
+  public void addNewStorageBox(RequestBox requestBox) throws IllegalArgumentException {
+    if(boxRepository.findBoxByBoxName(requestBox.getBoxName()).isPresent()) {
       throw new IllegalArgumentException("A box with that name already exists");
     }
 
-//    Optional<Room> optRoom = roomService.findRoom(boxContents.getRoom());
-    Room room = roomService.findOrCreateRoom(boxContents.getRoom());
-    storageBox.setRoom(room);
+    StorageBox storageBox = storageBoxMapper.mapBoxDtoToEntity(requestBox);
 
     try {
       boxRepository.save(storageBox);
-      return getAllStorageBoxes();
+
     } catch (DuplicateKeyException e) {
       throw new IllegalArgumentException("A box with that name already exists");
     }
@@ -70,15 +135,15 @@ public class InventoryServiceImpl implements InventoryService {
   }
 
   @Override
-  public StorageBox updateBoxContents(BoxContents boxContents) {
+  public StorageBox updateBoxContents(RequestBox requestBox) {
 
-    StorageBox oldBox = boxRepository.findBoxByName(boxContents.getName()).orElseThrow();
+    StorageBox oldBox = boxRepository.findBoxByBoxName(requestBox.getBoxName()).orElseThrow();
 
-    if(boxContents.getBoxContents() != null) {
-      oldBox.setBoxContents(boxContents.getBoxContents());
+    if(requestBox.getBoxContents() != null) {
+      oldBox.setBoxContents(requestBox.getBoxContents());
     }
-    if(boxContents.getRoom() != null) {
-      oldBox.setRoom(roomService.findOrCreateRoom(boxContents.getRoom()));
+    if(requestBox.getRoomName() != null) {
+      oldBox.setRoom(roomService.findOrCreateRoom(requestBox.getRoomName()));
     }
     return boxRepository.save(oldBox);
 

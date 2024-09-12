@@ -9,6 +9,6 @@ import java.util.Optional;
 
 public interface BoxRepository extends MongoRepository<StorageBox, ObjectId> {
 //  @Query("name : '?0'")
-  Optional<StorageBox> findBoxByName(String name);
+  Optional<StorageBox> findBoxByBoxName(String boxName);
 
 }
