@@ -13,29 +13,29 @@ const SearchScreen = () => {
   const [results, setResults] = useState([]); // State for API results
   const [loading, setLoading] = useState(false); // State for loading indicator
 
-  // Function to fetch data from API
-  const fetchSearchResults = async (searchQuery) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `http://10.164.1.117:8080/inv/v1/globalSearch?searchItem=${searchQuery}`
-      );
-      const data = await response.json();
-      setResults(data.results);
-    } catch (error) {
-      console.error("Error fetching search results:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // // Function to fetch data from API
+  // const fetchSearchResults = async (searchQuery) => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch(
+  //       `http://10.164.1.117:8080/inv/v1/globalSearch?searchItem=${searchQuery}`
+  //     );
+  //     const data = await response.json();
+  //     setResults(data.results);
+  //   } catch (error) {
+  //     console.error("Error fetching search results:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  // useEffect to trigger search when query changes
-  useEffect(() => {
-    if (query.length > 2) {
-      // Only search when query is longer than 2 characters
-      fetchSearchResults(query);
-    }
-  }, [query]);
+  // // useEffect to trigger search when query changes
+  // useEffect(() => {
+  //   if (query.length > 2) {
+  //     // Only search when query is longer than 2 characters
+  //     fetchSearchResults(query);
+  //   }
+  // }, [query]);
 
   return (
     <View style={styles.container}>

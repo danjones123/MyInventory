@@ -11,8 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import SearchBar from "../../components/SearchBar"; // Reusable SearchBar component
-// import MasonryList from "@react-native-seoul/masonry-list";
-import MasonryList from "react-native-masonry-list";
+import MasonryList from "@react-native-seoul/masonry-list";
 
 const HomeScreen = () => {
   const [query, setQuery] = useState(""); // State for the search input
@@ -21,6 +20,8 @@ const HomeScreen = () => {
 
   const screenWidth = Dimensions.get("window").width;
   const tileWidth = screenWidth / 2 - 10; // Divide by 2 and subtract margin (5px * 2)
+
+  let itemCount = 0;
 
   // Function to fetch all data from the API
   const fetchAllData = async () => {
@@ -41,45 +42,67 @@ const HomeScreen = () => {
     fetchAllData(); // Fetch all data when the component mounts
   }, []);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.tile}>
-      <Text style={styles.tileTitle}>{item.boxName}</Text>
-      <Text style={styles.tileDescription}>{item.boxDescription}</Text>
-      <Text style={styles.tileSubtitle}>{item.roomName}</Text>
+  const filteredResults = results.filter((item) => {
+    const searchTerm = query.toLowerCase();
+    return (
+      item.boxName.toLowerCase().includes(searchTerm) ||
+      item.boxDescription.toLowerCase().includes(searchTerm) ||
+      item.boxContents.toLowerCase().includes(searchTerm)
+    );
+  });
 
-      {/* Nested FlatList for boxContents */}
-      <FlatList
-        data={item.boxContents} // Provide data to the nested FlatList
-        keyExtractor={(subItem) => subItem.toString()} // Unique key for each item in boxContents
-        renderItem={({ item: subItem }) => (
-          <View style={styles.subItemContainer}>
-            <Text style={styles.subItemText}>{subItem}</Text>
-          </View>
-        )}
-        numColumns={1}
-      />
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }) => {
+    let bgColour = "#fff";
+    if (itemCount % 3 == 0) {
+      bgColour = "#FFCCF9";
+    } else if (itemCount % 3 == 1) {
+      bgColour = "#C4FAF8";
+    } else {
+      bgColour = "#DBFFD6";
+    }
+
+    itemCount++;
+
+    return (
+      <TouchableOpacity style={[styles.tile, { backgroundColor: bgColour }]}>
+        <Text style={styles.tileTitle}>{item.boxName}</Text>
+        <Text style={styles.tileDescription}>{item.boxDescription}</Text>
+        <Text style={styles.tileSubtitle}>{item.roomName}</Text>
+
+        {/* Nested FlatList for boxContents */}
+        <MasonryList
+          data={item.boxContents} // Provide data to the nested FlatList
+          keyExtractor={(subItem) => subItem.toString()} // Unique key for each item in boxContents
+          renderItem={({ item: subItem }) => (
+            <View style={styles.subItemContainer}>
+              <Text style={styles.subItemText}>{subItem}</Text>
+            </View>
+          )}
+          numColumns={1}
+        />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.searchBarContainer}>
         <SearchBar query={query} setQuery={setQuery} />
-
-        {loading && <ActivityIndicator size="large" color="#0000ff" />}
       </View>
-      {/* <View> */}
-      <FlatList
-        // style={{ width: "100%" }}
-        data={results} // The array of items to render
-        keyExtractor={(item) => item.boxName.toString()} // Unique key for each item
-        renderItem={renderItem} // Function to render each item
-        ListEmptyComponent={!loading && <Text>No results found</Text>} // Fallback if no data
-        // Set numColumns to specify the number of columns in the grid
-        numColumns={2} // Adjust the number of columns as needed
-        contentContainerStyle={styles.listContent}
-      />
-      {/* </View> */}
+      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+
+      <View style={styles.masonryContainer}>
+        <MasonryList
+          // style={{ width: "100%" }}
+          data={filteredResults} // The array of items to render
+          keyExtractor={(item) => item.boxName.toString()} // Unique key for each item
+          renderItem={renderItem} // Function to render each item
+          ListEmptyComponent={!loading && <Text>No results found</Text>} // Fallback if no data
+          // Set numColumns to specify the number of columns in the grid
+          numColumns={2} // Adjust the number of columns as needed
+          contentContainerStyle={styles.listContent}
+        />
+      </View>
     </View>
   );
 };
@@ -87,15 +110,20 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    padding: 0,
     backgroundColor: "#fff",
   },
   searchBarContainer: {
     marginBottom: 10, // Space between the search bar and the FlatList
     height: 50,
   },
+  masonryContainer: {
+    flex: 1, // This ensures the MasonryList takes up the remaining space
+  },
   listContent: {
+    padding: 10,
     paddingBottom: 20,
+    alignItems: "stretch",
     flexGrow: 1, // Ensures FlatList can grow to fill available space
   },
   resultItem: {
@@ -110,7 +138,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f6f6f6",
     padding: 5,
     margin: 5,
-    width: Dimensions.get("window").width / 2 - 10,
+    width: Dimensions.get("window").width / 2 - 15,
     borderRadius: 10, // Rounded corners
     borderWidth: 1, // Border thickness
     borderColor: "#ccc", // Border color (light gray)
