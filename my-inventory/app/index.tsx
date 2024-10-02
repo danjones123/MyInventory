@@ -15,7 +15,24 @@ export default function Index() {
         backgroundColor: "#55555",
       }}
     >
-      <Text>MyInventory</Text>
+      <View
+        style={{
+          alignItems: "center",
+          backgroundColor: "#55555",
+        }}
+      >
+        <Text
+          style={{
+            alignItems: "center",
+            fontSize: 24,
+            fontWeight: "bold",
+            color: "#333",
+            letterSpacing: 1, // Add a bit of letter spacing for a sleek look
+          }}
+        >
+          MyInventory
+        </Text>
+      </View>
       <HomeScreen />
       {/* <SearchBar></SearchBar> */}
     </View>

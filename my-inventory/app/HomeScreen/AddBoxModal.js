@@ -21,12 +21,12 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
   const [newItem, setNewItem] = useState("");
   const [roomName, setRoomName] = useState("");
 
-  // const handleCloseModal = () => {
-  //   setModalVisible(false);
-  //   setBoxName("");
-  //   setBoxDescription("");
-  //   setRoomName("");
-  // };
+  const handleClearModalData = () => {
+    setBoxName("");
+    setBoxDescription("");
+    setRoomName("");
+    setBoxContents([]);
+  };
 
   const addItemToList = () => {
     if (newItem.trim()) {
@@ -36,18 +36,36 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
   };
 
   // Handle form submission
-  const handleFormSubmit = () => {
+  const handleFormSubmit = async () => {
     const newBox = {
       boxName,
       boxDescription,
       roomName,
       boxContents, // You can add an empty contents array or handle it as needed
     };
+    console.log(newBox);
+    try {
+      const response = await fetch("http://10.164.1.117:8080/inv/v1/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newBox),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      console.log("New box saved successfully");
+
+      // Close the modal after successful submission
+      handleSubmit(newBox);
+      handleCloseModal();
+    } catch (error) {
+      console.error("Failed to save the box:", error);
+    }
 
     setResults([...results, newBox]);
-
-    console.log(newBox);
-    handleSubmit(newBox); // Close the modal after submission
   };
 
   return (

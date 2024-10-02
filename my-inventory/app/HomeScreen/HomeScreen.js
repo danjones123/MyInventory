@@ -15,7 +15,8 @@ import AddBoxModal from "./AddBoxModal";
 const HomeScreen = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false); // State to control modal visibility
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [counter, setBoxCounter] = useState(0);
 
   // Function to open the modal
   const handleOpenModal = () => {
@@ -29,6 +30,7 @@ const HomeScreen = () => {
 
   const handleAddBox = (boxData) => {
     console.log("Box Added:", boxData);
+    setBoxCounter((prevCounter) => prevCounter + 1);
     setIsModalVisible(false); // Close modal after submission
   };
 
@@ -39,7 +41,7 @@ const HomeScreen = () => {
       </View>
       {loading && <ActivityIndicator size="large" color="#0000ff" />}
 
-      <ViewBoxes />
+      <ViewBoxes counter={counter} />
 
       <TouchableOpacity style={styles.floatingButton} onPress={handleOpenModal}>
         <AntDesign name="plus" size={24} color="white" />

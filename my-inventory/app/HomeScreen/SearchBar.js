@@ -30,12 +30,13 @@ const SearchScreen = () => {
   // };
 
   // // useEffect to trigger search when query changes
-  // useEffect(() => {
-  //   if (query.length > 2) {
-  //     // Only search when query is longer than 2 characters
-  //     fetchSearchResults(query);
-  //   }
-  // }, [query]);
+  useEffect(() => {
+    if (query.length > 2) {
+      console.log(query);
+      // Only search when query is longer than 2 characters
+      // fetchSearchResults(query);
+    }
+  }, [query]);
 
   return (
     <View style={styles.container}>
