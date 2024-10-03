@@ -16,7 +16,14 @@ public class RoomServiceImpl implements RoomService {
 
   public Room findOrCreateRoom(String name) {
     Room room = new Room();
+
+    System.out.println("New Room, name = " + name);
+    if(name == null || name.equals("") ) {
+      name = "The Void";
+    }
+
     room.setRoomName(name);
+
 
     if(findRoom(name).isPresent()) {
       return findRoom(name).get();
