@@ -8,7 +8,7 @@ import {
   FlatList,
   Modal,
 } from "react-native";
-
+import SelectRoomDropdown from "./SelectRoomDropdown";
 import MasonryList from "@react-native-seoul/masonry-list";
 import { AntDesign } from "@expo/vector-icons";
 
@@ -20,6 +20,44 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
   const [boxContents, setBoxContents] = useState([]);
   const [newItem, setNewItem] = useState("");
   const [roomName, setRoomName] = useState("");
+  const [text, onChangeText] = useState(null);
+  const [roomOptions, setRoomOptions] = useState([]);
+  const [loadingRooms, setLoadingRooms] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+
+  useEffect(() => {
+    if (isVisible) {
+      fetchRoomNames();
+    }
+  }, [isVisible]);
+
+  const fetchRoomNames = async () => {
+    setLoadingRooms(true); // Start loading
+    setFetchError(null); // Clear any previous errors
+
+    try {
+      const response = await fetch("http://10.164.1.117:8080/inv/v1/rooms");
+      const data = await response.json();
+
+      console.log(data);
+
+      // Map the data into picker-compatible format
+      const formattedRooms = data.map((room) => ({
+        label: room.roomName,
+        value: room.roomName,
+      }));
+
+      // Add "Add new room..." as an option at the end
+      formattedRooms.push({ label: "Add new room...", value: "add_new" });
+
+      setRoomOptions(formattedRooms);
+    } catch (error) {
+      console.error("Error fetching room names:", error);
+      setFetchError("Error fetching room names");
+    } finally {
+      setLoadingRooms(false); // Stop loading
+    }
+  };
 
   const handleClearModalData = () => {
     setBoxName("");
@@ -54,13 +92,14 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error: ${response.status}, ${response.body}`);
       }
       console.log("New box saved successfully");
 
       // Close the modal after successful submission
       handleSubmit(newBox);
       handleCloseModal();
+      handleClearModalData();
     } catch (error) {
       console.error("Failed to save the box:", error);
     }
@@ -91,11 +130,18 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
             value={boxDescription}
             onChangeText={setBoxDescription}
           />
-          <TextInput
+          {/* <TextInput
             style={styles.input}
             placeholder="Room Name"
             value={roomName}
             onChangeText={setRoomName}
+          /> */}
+
+          <SelectRoomDropdown
+            name="dropdowntext"
+            value={text}
+            onChangeText={onChangeText}
+            dropdownData={roomOptions}
           />
 
           <TextInput

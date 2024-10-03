@@ -88,7 +88,11 @@ const ViewBoxes = (counter) => {
 
         {/* Nested FlatList for boxContents */}
         <MasonryList
-          data={item.boxContents} // Provide data to the nested FlatList
+          data={
+            item.boxContents.length > 8
+              ? [...item.boxContents.slice(0, 8), "..."]
+              : item.boxContents
+          } // Provide data to the nested FlatList
           keyExtractor={(subItem, index) => `${subItem}-${index}`} // Unique key for each item in boxContents
           renderItem={({ item: subItem }) => (
             <View style={styles.subItemContainer}>
