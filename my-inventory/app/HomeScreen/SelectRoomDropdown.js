@@ -112,13 +112,15 @@ export default function EditableDropdown({
           id={name}
           name={name}
           style={styles.textInput}
-          placeholder="Enter Anything"
+          placeholder="Add Room"
           placeholderTextColor="#99A3A4"
           selectionColor="#000000"
+          onFocus={openDropdown}
           value={textValue}
           onChangeText={onChangeText}
+          ref={dropdownButtonRef}
         />
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.dropdownButton}
           onPress={handleDropdownOpen}
           ref={dropdownButtonRef}
@@ -126,7 +128,7 @@ export default function EditableDropdown({
           <Text style={styles.dropdownButtonText}>
             {!visible ? "Open" : "Close"}
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );

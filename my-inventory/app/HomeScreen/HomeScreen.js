@@ -13,7 +13,8 @@ import ViewBoxes from "./ViewBoxes";
 import AddBoxModal from "./AddBoxModal";
 
 const HomeScreen = () => {
-  const [query, setQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRoom, setFilterRoom] = useState("");
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [counter, setBoxCounter] = useState(0);
@@ -37,11 +38,20 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.searchBarContainer}>
-        <SearchBar query={query} setQuery={setQuery} />
+        <SearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filterRoom={filterRoom}
+          setFilterRoom={setFilterRoom}
+        />
       </View>
       {loading && <ActivityIndicator size="large" color="#0000ff" />}
 
-      <ViewBoxes counter={counter} />
+      <ViewBoxes
+        counter={counter}
+        searchQuery={searchQuery}
+        filterRoom={filterRoom}
+      />
 
       <TouchableOpacity style={styles.floatingButton} onPress={handleOpenModal}>
         <AntDesign name="plus" size={24} color="white" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Dimensions,
@@ -6,13 +6,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  ScrollView,
   Modal,
 } from "react-native";
 
 import MasonryList from "@react-native-seoul/masonry-list";
 
-const ViewBoxes = (counter) => {
-  const [query, setQuery] = useState("");
+const ViewBoxes = ({ counter, searchQuery, filterRoom }) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false); // Modal visibility state
@@ -40,7 +40,7 @@ const ViewBoxes = (counter) => {
     //WHEN ADDING MULTIPLE BOXCONTENTS IT RENDERS NONE - ?
 
     try {
-      const response = await fetch("http://10.164.1.117:8080/inv/v1/");
+      const response = await fetch("http://192.168.1.106:8080/inv/v1/");
       const data = await response.json();
       setResults(data);
     } catch (error) {
@@ -50,20 +50,32 @@ const ViewBoxes = (counter) => {
     }
   };
 
-  // useEffect to call the /api/getall endpoint when the home screen mounts
   useEffect(() => {
-    fetchAllData(); // Fetch all data when the component mounts
+    fetchAllData();
   }, [counter]);
 
-  const filteredResults = results.filter((item) => {
-    // console.log(item);
-    const searchTerm = query.toLowerCase();
-    return (
-      item.boxName.toLowerCase().includes(searchTerm) ||
-      item.boxDescription.toLowerCase().includes(searchTerm) ||
-      item.boxContents.toLowerCase().includes(searchTerm)
-    );
-  });
+  const filteredResults = useMemo(() => {
+    return results.filter((item) => {
+      const searchTerm = searchQuery.toLowerCase();
+      const searchRoomName = filterRoom.toLowerCase();
+
+      const roomMatches =
+        searchRoomName !== ""
+          ? item.roomName?.toLowerCase() === searchRoomName
+          : true; // Allow all rooms if no filter is applied
+
+      const boxMatches =
+        item.boxName?.toLowerCase().includes(searchTerm) ||
+        item.boxDescription?.toLowerCase().includes(searchTerm) ||
+        (Array.isArray(item.boxContents) &&
+          item.boxContents.some((content) =>
+            content.toLowerCase().includes(searchTerm)
+          ));
+
+      // Both room and box criteria must match if room filter is applied
+      return roomMatches && boxMatches;
+    });
+  }, [searchQuery, results, filterRoom]);
 
   const renderItem = ({ item }) => {
     let bgColour = "#fff";
@@ -77,6 +89,7 @@ const ViewBoxes = (counter) => {
 
     itemCount++;
 
+    // console.log(item);
     return (
       <TouchableOpacity
         style={[styles.tile, { backgroundColor: bgColour }]}
@@ -86,19 +99,19 @@ const ViewBoxes = (counter) => {
         <Text style={styles.tileDescription}>{item.boxDescription}</Text>
         <Text style={styles.tileSubtitle}>{item.roomName}</Text>
 
-        {/* Nested FlatList for boxContents */}
-        <MasonryList
+        <FlatList
           data={
-            item.boxContents.length > 8
+            Array.isArray(item.boxContents) && item.boxContents.length > 8
               ? [...item.boxContents.slice(0, 8), "..."]
               : item.boxContents
-          } // Provide data to the nested FlatList
-          keyExtractor={(subItem, index) => `${subItem}-${index}`} // Unique key for each item in boxContents
+          }
+          keyExtractor={(subItem, index) => `${subItem}-${index}`}
           renderItem={({ item: subItem }) => (
             <View style={styles.subItemContainer}>
               <Text style={styles.subItemText}>{subItem}</Text>
             </View>
           )}
+          scrollEnabled={false}
           numColumns={1}
         />
       </TouchableOpacity>
@@ -115,13 +128,14 @@ const ViewBoxes = (counter) => {
         ListEmptyComponent={!loading && <Text>No results found</Text>} // Fallback if no data
         // Set numColumns to specify the number of columns in the grid
         numColumns={2} // Adjust the number of columns as needed
+        extraData={searchQuery}
         contentContainerStyle={styles.listContent}
       />
 
       {selectedBox && (
         <Modal
           visible={isModalVisible}
-          animationType="slide"
+          animationType="fade"
           transparent={true}
           onRequestClose={closeModal}
         >
@@ -132,13 +146,13 @@ const ViewBoxes = (counter) => {
               <Text>{selectedBox.roomName}</Text>
 
               {selectedBox.boxContents && (
-                <View style={styles.boxContentsContainer}>
+                <ScrollView style={styles.boxContentsContainer}>
                   {selectedBox.boxContents.map((content, index) => (
                     <Text key={index} style={styles.contentItem}>
                       {content}
                     </Text>
                   ))}
-                </View>
+                </ScrollView>
               )}
 
               <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
@@ -207,7 +221,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     width: "80%",
-    alignItems: "center",
+    alignItems: "left",
+    maxHeight: "90%",
   },
   modalTitle: {
     fontSize: 20,
@@ -226,6 +241,9 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#ddd",
     borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    display: "flex",
   },
 });
 

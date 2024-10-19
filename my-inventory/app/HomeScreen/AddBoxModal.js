@@ -36,10 +36,10 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
     setFetchError(null); // Clear any previous errors
 
     try {
-      const response = await fetch("http://10.164.1.117:8080/inv/v1/rooms");
+      const response = await fetch("http://192.168.1.106:8080/inv/v1/rooms");
       const data = await response.json();
 
-      console.log(data);
+      // console.log(data);
 
       // Map the data into picker-compatible format
       const formattedRooms = data.map((room) => ({
@@ -48,7 +48,7 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
       }));
 
       // Add "Add new room..." as an option at the end
-      formattedRooms.push({ label: "Add new room...", value: "add_new" });
+      formattedRooms.push({ label: "Add new room...", value: "" });
 
       setRoomOptions(formattedRooms);
     } catch (error) {
@@ -83,7 +83,7 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
     };
     console.log(newBox);
     try {
-      const response = await fetch("http://10.164.1.117:8080/inv/v1/", {
+      const response = await fetch("http://192.168.1.106:8080/inv/v1/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -139,8 +139,8 @@ const AddBoxModal = ({ isVisible, handleCloseModal, handleSubmit }) => {
 
           <SelectRoomDropdown
             name="dropdowntext"
-            value={text}
-            onChangeText={onChangeText}
+            value={roomName}
+            onChangeText={setRoomName}
             dropdownData={roomOptions}
           />
 
